@@ -1,9 +1,5 @@
 #include "water.h"
 
-void Water::setCommand(int command) 
-{
-  water_command = command;
-}
 void Water::checkWater() // включение и отключение автополива
 {
 	if (water_started) 

@@ -102,5 +102,9 @@ public:
   void gsmInit();
   void gsmFail();
   void gsmInitSMS();
+  void log(const __FlashStringHelper* ifsh);
+  void log(int, int = DEC);
+  void log(const char str[]);
+  void clearStr(int); //очищает строку LCD экрана. строка начинается с 0
 };
 #endif

@@ -7,7 +7,7 @@ double Temp::getBoxTemp()
 
 double Temp::getRoomTemp() 
 {
-  int raw_adc = analogRead(THERMROOMIN);
+  int raw_adc = analogRead(THERM_ROOM_IN);
   double temp = log(((10240000/raw_adc) - 10000));
   temp = 1 / (0.001129148 + (0.000234125 * temp) + (0.0000000876741 * temp * temp * temp));
   temp = temp - 273.15;

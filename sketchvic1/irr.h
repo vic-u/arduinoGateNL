@@ -10,7 +10,7 @@
 
 // класс управления автополивом
 class Irrigation {
-private:
+public:
   unsigned long IRR_TIMER_OFF_INT = 0x5265C00;//1000*60*60*24; // запуск полива раз в сутки в миллисекундах
   unsigned long IRR_TIMER_ON_INT = 0x36EE80;//1000*60*60; // полив длится один час в миллисекундах
   boolean irr_started = false; // флаг указывает текущее состояние реле, включено или нет
@@ -22,7 +22,6 @@ public:
   ~Irrigation(){};
   //void checkIrrigation(VGSM &vgsm);
   void checkIrrigation2();
-  void setCommand(int command);
   boolean getStarted();
   void Init();
   boolean testflag = false;

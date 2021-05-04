@@ -1,10 +1,5 @@
 #include "holl.h"
 
-
-void Refrigerator::setCommand(int command) 
-{
-  refr_command = command;
-}
 void Refrigerator::checkRefrigerator()
 {
 	if (refr_started)

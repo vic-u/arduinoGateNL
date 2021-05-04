@@ -1,10 +1,5 @@
 #include "irr.h"
 
-
-void Irrigation::setCommand(int command) 
-{
-  irr_command = command;
-}
 //команда обработки автополива по смс сообщению включение и выключение
 void Irrigation::checkIrrigation2()
 {
