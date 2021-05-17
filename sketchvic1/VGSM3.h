@@ -18,7 +18,7 @@
 //#define command_APN "AT+CSTT=\"internet.tele2.ru\",\"\",\"\""
 #define data_ip_protocol "AT+CIPSTART=\"TCP\",\"194.87.144.141\",\"3000\""
 //#define data_ip_protocol "AT+CIPSTART=\"TCP\",\"ardu.damasarent.com\",\"80\""
-#define SMS_COUNT 25
+#define SMS_COUNT 10
 
 class VGSM3
 {
@@ -36,6 +36,8 @@ public:
 	boolean crf = false; //флаг прихода команды по смс с управлением холодильником
 	boolean cwf = false; //флаг прихода команды по смс с управлением водой
 	boolean cirrf = false; //флаг прихода команды по смс с управлением авто поливом
+	boolean chtf = false; //флаг прихода команды по смс с изменением макс температуры
+	boolean chdf = false; //флаг прихода команды по смс с изменением дельты
 	
 	void Init(MYLCD &lcd); // открываем порт и отображаем инфу на дисплее
 	int8_t SendATcommand4(const __FlashStringHelper * commandAT, const char* expected_answer1, const char* expected_answer2, unsigned int timeout = 10000, unsigned int adelay = 1000);
@@ -53,10 +55,11 @@ public:
 	
 	boolean SMSCheckNewMsg();
 	void SMSDelete(int index);
-	boolean CheckSMSCommand(Heater& htr, Refrigerator& holl, Water& wtr, Irrigation& irr, boolean& hf, boolean& rf, boolean& wf, boolean& irrf);
+	boolean CheckSMSCommand(Heater& htr, Refrigerator& holl, Water& wtr, Irrigation& irr, boolean& hf, boolean& rf, boolean& wf, boolean& irrf, boolean& htf, boolean& hdf);
 	void StatusChr(double boxtemp, double roomtemp, boolean wtrflag, boolean hollflag, boolean irrflag, boolean htrflag, int free_ram);
 	boolean ConvertTempChr(char * command, int &t);
-	boolean TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, boolean hollflag, boolean wtrflag, boolean irrflag, Heater& htr, Refrigerator& holl, Water& wtr, Irrigation& irr, boolean hf, boolean rf, boolean wf, boolean irrf);
+	boolean TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, boolean hollflag, boolean wtrflag, boolean irrflag, Heater& htr, Refrigerator& holl, Water& wtr, Irrigation& irr, boolean hf, boolean rf, 
+		boolean wf, boolean irrf, boolean htf, boolean hdf);
 	boolean HardSocketReset();
 	int TCPSocketResponse(Heater& htr, Refrigerator& holl, Water& wtr, Irrigation& irr);
 	boolean ParseTemplateChr(int &from_last, const char *tmpl, const char *delim, char *s, int size_s, const char *empty = NULL);

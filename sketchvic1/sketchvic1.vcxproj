@@ -140,7 +140,6 @@
     <ClInclude Include="temp.h">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClInclude Include="VGSM2.h" />
     <ClInclude Include="VGSM3.h" />
     <ClInclude Include="water.h">
       <FileType>CppCode</FileType>
@@ -155,7 +154,6 @@
     <ClCompile Include="move.cpp" />
     <ClCompile Include="mylcd.cpp" />
     <ClCompile Include="temp.cpp" />
-    <ClCompile Include="VGSM2.cpp" />
     <ClCompile Include="VGSM3.cpp" />
     <ClCompile Include="water.cpp" />
   </ItemGroup>

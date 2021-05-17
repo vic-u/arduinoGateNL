@@ -75,6 +75,9 @@ void loop() {
 	}
 	htr.setRoomTemp(htr.getRoomTemp()); //передаем обогревателю данные с датчика
 #pragma endregion
+#pragma boxtemp
+	if (tmp.CheckBoxTemp()) ssr.Off(); // проверяем температуру внутри блока, если
+#pragma endregion
 #pragma region CHECK MODEM ABILITY
 	if (vgsm3.SendATcommand4(F("AT"), mdm_ok, mdm_ok, WT5) != 1) {//отправляем в модем АТ команду и читаем текущий буфер. В этот момент может прийти команда смс
 #ifdef _TRACE
@@ -88,7 +91,7 @@ void loop() {
 	Serial.println(F("MODEM OK"));
 	lcd.log(F("MODEM OK"));
 #endif
-	lcd.Status(tmp.getBoxTemp(), htr.getTempArr(), holl.getStarted(), wtr.getStarted(), irr.getStarted(), htr.getStarted(), true); // на LCD экран выводим информацию
+	lcd.Status(tmp.getBoxTemp(), htr.getTempArr(), holl.getStarted(), wtr.getStarted(), irr.getStarted(), htr.getStarted(), true, htr.max_room_temp, htr.delta_temp); // на LCD экран выводим информацию
 #pragma endregion
 #pragma region FIRST START
 
@@ -107,7 +110,7 @@ void loop() {
 		Serial.println(F("NewSMS")); //Done1
 		lcd.log(F("NewSMS"));
 #endif
-		if (vgsm3.CheckSMSCommand(htr, holl, wtr, irr, vgsm3.chf, vgsm3.crf, vgsm3.cwf, vgsm3.cirrf)) { // проверяем приход sms комманды, в случае прихода выставляем флаги для дальнейшей обработки действий
+		if (vgsm3.CheckSMSCommand(htr, holl, wtr, irr, vgsm3.chf, vgsm3.crf, vgsm3.cwf, vgsm3.cirrf, vgsm3.chtf, vgsm3.chdf)) { // проверяем приход sms комманды, в случае прихода выставляем флаги для дальнейшей обработки действий
 #ifdef _TRACE
 			Serial.println(F("NewCom")); //Done3
 			lcd.log(F("NewCom"));
@@ -121,15 +124,18 @@ void loop() {
 	}
 #pragma endregion
 #pragma region TCP SEND
-	if (gprsactive) gprsactive = vgsm3.TCPSendData2(tmp.getBoxTemp(), htr.getTempArr(), htr.getStarted(1), holl.getStarted(), wtr.getStarted(), irr.getStarted(), htr, holl, wtr, irr, vgsm3.chf, vgsm3.crf, vgsm3.cwf, vgsm3.cirrf);
+	if (gprsactive) gprsactive = vgsm3.TCPSendData2(tmp.getBoxTemp(), htr.getTempArr(), htr.getStarted(1), holl.getStarted(), wtr.getStarted(), irr.getStarted(), htr, holl, wtr, irr, 
+		vgsm3.chf, vgsm3.crf, vgsm3.cwf, vgsm3.cirrf, vgsm3.chtf, vgsm3.chdf);
 #pragma endregion
 	htr.checkHeat(); //проверяем только обогрев, так как он может быть уже включен
-
+	holl.checkRefrigerator(); // отрабатываем флаг команды включения холодильника
+	wtr.checkWater();// отрабатываем флаг команды включения подогрева воды
+	irr.checkIrrigation2();// отрабатываем автополив
 	ssr.Blink();
 #ifdef _TRACE
 	Serial.print(F("free memory - "));
 	Serial.println(ssr.freeRam());
-	lcd.log(ssr.freeRam());
+	lcd.FreeRam(ssr.freeRam(), htr.max_room_temp, htr.delta_temp);
 #endif
 	delay(30000); //ждем 30 секунд и делаем новый опрос 
 }

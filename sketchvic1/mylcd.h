@@ -98,7 +98,8 @@ public:
   size_t print(int, int = DEC);
 
   void Init();
-  void Status(double boxtemp, double roomtemp, boolean hollflag, boolean wtrflag, boolean irrflag, boolean htrflag, boolean gsmflag);
+  void Status(double boxtemp, double roomtemp, boolean hollflag, boolean wtrflag, boolean irrflag, boolean htrflag, boolean gsmflag, int maxroomt, int deltat);
+  void FreeRam(int freeram, int maxroomt, int deltat);
   void gsmInit();
   void gsmFail();
   void gsmInitSMS();

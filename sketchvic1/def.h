@@ -21,8 +21,8 @@
 #define SSR_1   6	// будем использовать для управления термостатом
 #define VENT    7   // цифровой пин для включения вентилятора охлаждения внутри корпуса
 
-#define SSR_W  10 // 9 цифровой пин для включения подогрева воды
-#define SSR_H   11 // 10 цифровой пин для включения холодильника
+#define SSR_W  11 // 9 цифровой пин для включения подогрева воды
+#define SSR_H   10 // 10 цифровой пин для включения холодильника
 #define IRR       12 // 12 цифровой пин для включения автополива
 #define LED		13
 
@@ -38,7 +38,7 @@
 #define  ON 1
 #define OFF 2
 
-#define _SS_MAX_RX_BUFF 300
+//#define _SS_MAX_RX_BUFF 300
 
 #ifndef _TRACE 
 #define _TRACE
@@ -97,25 +97,25 @@ const char mdm_call_ready[]    PROGMEM = { "CALL READY" };
 const char tmpl_sms[]			PROGMEM = { "+CMTI:" };
 const char tmpl_tcp[]			PROGMEM = { "+CIPRXGET:" };
 
-const char rest_h1[]			PROGMEM = { "GET /entry2/" };
-const char rest_h2[]			PROGMEM = { " HTTP/1.1\r\n" };
+//const char rest_h1[]			PROGMEM = { "GET /entry2/" };
+//const char rest_h2[]			PROGMEM = { " HTTP/1.1\r\n" };
 //const char rest_h3[]			PROGMEM = { "Host:ardu.damasarent.com\r\n" };
-const char rest_h3[]			PROGMEM = { "Host:194.87.144.141:3000\r\n" };
-const char rest_h4[]			PROGMEM = { "User-Agent:ARDU\r\n" };
-const char rest_h5[]			PROGMEM = { "Accept:text/html\r\n" };
-const char rest_h6[]			PROGMEM = { "Connection:keep-alive\r\n" };
-const char rest_h7[]			PROGMEM = { "\r\n" };
+//const char rest_h3[]			PROGMEM = { "Host:194.87.144.141:3000\r\n" };
+//const char rest_h4[]			PROGMEM = { "User-Agent:ARDU\r\n" };
+//const char rest_h5[]			PROGMEM = { "Accept:text/html\r\n" };
+//const char rest_h6[]			PROGMEM = { "Connection:keep-alive\r\n" };
+//const char rest_h7[]			PROGMEM = { "\r\n" };
 const char resp_md[]			PROGMEM = { "=26FD52AD4E94=o2s1===" };
-const char eqv[]				PROGMEM = { "=" };
-const char comma[]				PROGMEM = { "," };
+const char eqv[]					PROGMEM = { "=" };
+const char comma[]			PROGMEM = { "," };
 const char angbr[]				PROGMEM = { ">" };
 const char quota[]				PROGMEM = { "\"" };
-const char fmt_sms_del[]        PROGMEM = { "AT+CMGD=%d,0\0" };
-const char fmt_sms_i_send[]     PROGMEM = { "%S%d%c" };
-const char fmt_sms_phone_send[] PROGMEM = { "AT+CMGS=\"%s\"" };
-const char fmt_sms_temp_send[]  PROGMEM = { "%S%d%c" };
-const char fmt_sms_sts_send[]  PROGMEM = { "%S%s%S%s%S%S%%S%S%%S%S%S%S%S%S%S%S%d%S%d%c" };
-const char fmt_http_sts_send[]  PROGMEM = { "%S%s%s%s%%s%s%s%s%s%s%s%s%s%s%s%s%s%S%S%S%S%S%S" };
+const char fmt_sms_del[]			PROGMEM = { "AT+CMGD=%d,0\0" };
+const char fmt_sms_i_send[]		PROGMEM = { "%S%d%c" };
+const char fmt_sms_phone_send[]	PROGMEM = { "AT+CMGS=\"%s\"" };
+const char fmt_sms_temp_send[]	PROGMEM = { "%S%d%c" };
+const char fmt_sms_sts_send[]  PROGMEM = { "%S%s%S%S%s%S%S%S%S%S%S%S%S%S%S%S%S%S%S%d%S%d%c" };
+const char fmt_http_sts_send[]  PROGMEM = { "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s" };
 /**
 итерфейс любово обогревательного устройства
 */

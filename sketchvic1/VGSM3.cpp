@@ -92,7 +92,7 @@ void VGSM3::SMSDelete(int index) {
 удаляем из памяти модем сообщения, чтобы не парсить всякое барахло
 */
 void VGSM3::DeleteAllSMS() {
-	SendATcommand4(F("AT+CPMS= \"MT\""), mdm_ok, mdm_error, WT5); //выбираем хранилище
+	SendATcommand4(F("AT+CPMS= \"SM\""), mdm_ok, mdm_error, WT5); //выбираем хранилище
 	for (int i = 1; i <= SMS_COUNT; i++) SMSDelete(i); // удаляем сообщения 
 }
 /**
@@ -180,11 +180,15 @@ boolean VGSM3::InitGSM() {
 	Serial.println(F("Send Reset"));
 #endif
 	// раскомментить
-	if(SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, 10000, 90000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
+	if (SendATcommand4(F("AT + CSCLK = 0"), mdm_ok, mdm_error, WT5) != 1) return false; 
+	if(SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, 10000, 20000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
+
+	//if (SendATcommand4(F("AT+CPOWD=0"), mdm_ok, mdm_error, 10000, 60000) != 1) return false;
+	//if (SendATcommand4(F("AT"), mdm_ok, mdm_error, 10000, 90000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
 	// здесь надо добавить ожидания до call ready
 	if (SendATcommand4(F("AT"), mdm_ok, mdm_error, WT5) != 1) return false;//первая команда в модем, для проверки, что оклемался после 
 	//перезагрузки// ждем 10 секунд чтобы все строки модем выдал в буфер
-	if (SendATcommand4(F("AT+CPMS= \"MT\""), mdm_ok, mdm_error, WT5) != 1) return false; // переключаем хранилище смс на сим карту и телефон
+	if (SendATcommand4(F("AT+CPMS= \"SM\""), mdm_ok, mdm_error, WT5) != 1) return false; // переключаем хранилище смс на сим карту и телефон
 	DeleteAllSMS();
 	return true;
 }
@@ -218,7 +222,7 @@ boolean VGSM3::SMSCheckNewMsg() {
 #ifdef _TRACE
 	//Serial.println(serial_buff);
 #endif
-	if (SendATcommand4(F("AT+CPMS= \"MT\""), mdm_ok, mdm_error, WT5) != 1) return false; //выбираем хранилище
+	if (SendATcommand4(F("AT+CPMS= \"SM\""), mdm_ok, mdm_error, WT5) != 1) return false; //выбираем хранилище
 	if (SendATcommand4(F("AT+CMGL=\"ALL\""), mdm_ok, mdm_error, WT5) != 1) {//прочитаем все сообщения из модема и если переполнится то получим 0
 		DeleteAllSMS();//когда придет большое сообщение на русском, оно переполнит будер и мы считаем только часть сообщения без OK и ERR и вернет 0, вот его мы и удалим
 		return false; //выходим после удаления всякой хрени
@@ -326,7 +330,8 @@ roomtemp - температура в комнате
 htrflag - флаг включенного отопления
 htr - объект отопления
 */
-boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, boolean hollflag, boolean wtrflag, boolean irrflag, Heater& htr, Refrigerator& holl, Water& wtr, Irrigation &irr, boolean hf, boolean rf, boolean wf, boolean irrf)
+boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, boolean hollflag, boolean wtrflag, boolean irrflag, Heater& htr, 
+	Refrigerator& holl, Water& wtr, Irrigation &irr, boolean hf, boolean rf, boolean wf, boolean irrf, boolean htf, boolean hdf)
 {
 	//// Gets Local IP Address
 	if (SendATcommand4(F("AT+CIFSR"), mdm_ip_ok, mdm_error, WT5) != 1) {
@@ -363,17 +368,20 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	Serial.println(str_dt);
 
 	Serial.println("StatusChr");
+	Serial.println(out_msg_buff);
 #endif	
 	//формируем строку в сервер
-	sprintf_P(out_msg_buff, fmt_http_sts_send, rest_h1, "=" MAC_ADDRESS DEVICENAME, str_bt, "=", str_rt, "=", 
+	sprintf_P(out_msg_buff, fmt_http_sts_send, "GET /entry2/", "=" MAC_ADDRESS DEVICENAME, str_bt, "=", str_rt, "=",
 		(hf) ? ((htrflag) ? "ON" : "OFF") : "", "=",
 		(rf) ? ((hollflag) ? "ON" : "OFF") : "", "=",
 		(wf) ? ((wtrflag) ? "ON" : "OFF") : "", "=",
 		(irrf) ? ((irrflag) ? "ON" : "OFF") : "", "=",
-		str_mt, "=", str_dt, rest_h2, rest_h3, rest_h4, rest_h5, rest_h6, rest_h7);
+		(htf) ? str_mt:"", "=", 
+		(hdf) ? str_dt:"", " HTTP/1.1\r\n", "Host:194.87.144.141:3000\r\n", "User-Agent:ARDU\r\n", "Accept:text/html\r\n", "Connection:keep-alive\r\n", "\r\n\0");
 #ifdef _TRACE
 	Serial.println("+++++++++");
 	Serial.println(out_msg_buff);
+	Serial.println("+++++++++");
 #endif	
 	//выставляем длину данных которые отправим
 	memset(aux_str, '\0', sizeof(aux_str));
@@ -392,6 +400,8 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	crf = false; //сбрасываем флаг, который передавали в случае прихода команды по смс
 	cwf = false; //сбрасываем флаг, который передавали в случае прихода команды по смс
 	cirrf = false; //сбрасываем флаг, который передавали в случае прихода команды по смс
+	chtf = false;
+	chdf = false;
 	//тут надо посмотреть ответ от сервера, может надо включить обогрев
 	//???????????????? надо читать по двести в цикле три раза, потому что из серийного порта больше 256 не приходит+ заголовок команды 50 символол, поэтому не влезает
 	if (SendATcommand4Str("AT+CIPRXGET=2,200", mdm_ok, mdm_error, 3000, 500) != 1) {//читаем ответ сервера он большой
@@ -522,7 +532,7 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
    отопителю и нагревателю воды. Отправит обратные соощения с подтверждением
    hf вернет флаг, если пришла команда на включение или отключение и сообщит ее на сервер с очередным пакетом
 */
-boolean VGSM3::CheckSMSCommand(Heater &htr, Refrigerator &holl, Water &wtr, Irrigation &irr, boolean &hf, boolean& rf, boolean& wf, boolean& irrf)
+boolean VGSM3::CheckSMSCommand(Heater &htr, Refrigerator &holl, Water &wtr, Irrigation &irr, boolean &hf, boolean& rf, boolean& wf, boolean& irrf, boolean& htf, boolean& hdf)
 {
 	if ((in_msg_buff == NULL) || (in_msg_buff == "\0")) return false; //пустой буффер, не может содержать команд
 
@@ -596,9 +606,15 @@ boolean VGSM3::CheckSMSCommand(Heater &htr, Refrigerator &holl, Water &wtr, Irri
 		return true;
 	}
 	//set temp
-	if (strstr_P(in_msg_buff, cmd_set_temp) != NULL)  return SetDeltaTemp(htr, false, hf);
+	if (strstr_P(in_msg_buff, cmd_set_temp) != NULL) {
+		htf = true;
+		return SetDeltaTemp(htr, false, hf);
+	}
 	//set delta
-	if (strstr_P(in_msg_buff, cmd_set_delta) != NULL) return SetDeltaTemp(htr, true, hf); //проверяем наличие команды изменения дельты
+	if (strstr_P(in_msg_buff, cmd_set_delta) != NULL) {
+		hdf = true;
+		return SetDeltaTemp(htr, true, hf); //проверяем наличие команды изменения дельты
+	}
 	//set start irr
 	if (strstr_P(in_msg_buff, cmd_start_irr) != NULL)
 	{
