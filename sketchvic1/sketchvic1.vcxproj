@@ -122,6 +122,7 @@
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClInclude Include="DHT.h" />
+    <ClInclude Include="GyverWDT.h" />
     <ClInclude Include="heat.h">
       <FileType>CppCode</FileType>
     </ClInclude>

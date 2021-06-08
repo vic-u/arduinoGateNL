@@ -1,4 +1,5 @@
 #include "VGSM3.h"
+#include "GyverWDT.h"
 
 /**
    Функция открывает порт модема на скорости 9600
@@ -17,9 +18,11 @@ void VGSM3::Init(MYLCD &lcd) {
 */
 int8_t VGSM3::SendATcommand4(const __FlashStringHelper *commandAT, const char* expected_answer1, const char* expected_answer2, unsigned int timeout, unsigned int adelay)
 {
+	Watchdog.reset();
 	if (commandAT != NULL) GSMport.println(commandAT);  // если команда не NULL, т.е. она есть, то отправляем в порт модема ее.
 	//читаем буфер или после отправки этой команды или текущий буфер от предыдущей команды
 	return ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
+	Watchdog.reset();
 }
 /**
    Отправляет в модем команду из commandAT
@@ -27,8 +30,10 @@ int8_t VGSM3::SendATcommand4(const __FlashStringHelper *commandAT, const char* e
    вычитывает результат ответа модема в глобальный буфер serial_buff
 */
 int8_t VGSM3::SendATcommand4Str(const char* commandAT, const char* expected_answer1, const char* expected_answer2, unsigned int timeout, unsigned int adelay) {
+	Watchdog.reset();
 	if (commandAT != NULL) GSMport.println(commandAT);  // отправляем команду в порт модема
 	return  ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
+	Watchdog.reset();
 }
 /**
    Функция читает данные из буфера модема в глобальную переменную
@@ -104,17 +109,20 @@ commandAT может быть NULL, тогда команда не отправ�
 */
 boolean VGSM3::WaitResponse_P(const __FlashStringHelper * commandAT, const char* expected_answer1, const char* expected_answer2) {
 	// сначала поищем шаблон в уже  пришедшем и вычатанном буффере из модема
+	Watchdog.reset();
 	if ((strstr_P(serial_buff, expected_answer1) != NULL) || (strstr_P(serial_buff, expected_answer2) != NULL)) return true;
 	// в буфере нет, значит шлем формальную команду, чтобы среди ответа увидеть и нужный нам шаблон, ответа. Например, подтверждение отправки смс
 	int i = 0;
 	//command может скосячить, так как он стат памяти
 	while ((SendATcommand4(commandAT, expected_answer1, expected_answer2, WT5) == 0)) {
+		Watchdog.reset();
 		if (i >= (12 * 3)) {
 			return false; // но не более трех минут 5 секунд ждем в цикле чтения 12 раз в минуту, 
 		//иначе принудительно на выход
 		}
 		i = i + 1;
 	}
+	Watchdog.reset();
 	return true;
 }
 /**
@@ -130,6 +138,7 @@ boolean VGSM3::ParseTemplateChr(int &from_last, const char *tmpl, const char *de
 	//ищем первое вхождение шаблона в строку
 	//если размер буфера возврата =0 или в строке нет шаблона или в строке нет разделителя, то разбирать нечего
 	//размер буффера для возрата результата 0 или в строке нет шаблона или в строке нет нужного разделителя, выходим 
+	Watchdog.reset();
 	if ((size_s == 0) || (strstr_P(serial_buff, tmpl) == NULL) || (strstr_P(serial_buff, delim) == NULL)) return false;
 	if ((empty != NULL) && (strstr_P(serial_buff, empty) == NULL)) return false; //проверяем наличие стартового шаблона, если он задан и его нет в строке,
 	//то можно не разбирать
@@ -167,6 +176,7 @@ boolean VGSM3::ParseTemplateChr(int &from_last, const char *tmpl, const char *de
 	memset(s, '\0', size_s);
 	strncpy(s, serial_buff + first, len); //копируем строку
 	from_last = last; // возвращаем значение последнего найденного вхождения шаблона delim позиция начала 
+	Watchdog.reset();
 	return true;
 }
 /**
@@ -179,9 +189,10 @@ boolean VGSM3::InitGSM() {
 #ifdef _TRACE
 	Serial.println(F("Send Reset"));
 #endif
+	Watchdog.reset();
 	// раскомментить
 	if (SendATcommand4(F("AT + CSCLK = 0"), mdm_ok, mdm_error, WT5) != 1) return false; 
-	if(SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, 10000, 20000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
+	if(SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, WT5) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
 
 	//if (SendATcommand4(F("AT+CPOWD=0"), mdm_ok, mdm_error, 10000, 60000) != 1) return false;
 	//if (SendATcommand4(F("AT"), mdm_ok, mdm_error, 10000, 90000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
@@ -190,6 +201,7 @@ boolean VGSM3::InitGSM() {
 	//перезагрузки// ждем 10 секунд чтобы все строки модем выдал в буфер
 	if (SendATcommand4(F("AT+CPMS= \"SM\""), mdm_ok, mdm_error, WT5) != 1) return false; // переключаем хранилище смс на сим карту и телефон
 	DeleteAllSMS();
+	Watchdog.reset();
 	return true;
 }
 /**
@@ -200,7 +212,7 @@ void VGSM3::SendInitSMSChr()
 #ifdef _TRACE
 	Serial.println(F("Init SMS Send"));
 #endif	
-
+	Watchdog.reset();
 	memset(out_msg_buff, '\0', sizeof(out_msg_buff));
 	memset(out_phn_buff, '\0', sizeof(out_phn_buff));
 
@@ -212,6 +224,7 @@ void VGSM3::SendInitSMSChr()
 	Serial.println(out_phn_buff);
 #endif	
 	SendSMSChr(out_msg_buff, out_phn_buff);
+	Watchdog.reset();
 }
 /**
 функция проверяет наличие непрочитанных сообщений в модеме UNREAD
@@ -290,6 +303,7 @@ boolean VGSM3::InitGPRS() {
 	// http://badembed.ru/sim900-tcp-soedinenie-s-serverom/
 	//в случае ошибки на одно из этапов, уходим в перезагрузку 
 	// Selects Single-connection mode
+	Watchdog.reset();
 	if (SendATcommand4(F("AT+CREG?"), mdm_ok, mdm_error, WT5) != 1) return false;//проверяем регистрацию в сети
 	if (SendATcommand4(F("AT+CGATT=1"), mdm_ok, mdm_error, WT5) != 1) 
 		if (!WaitResponse_P(NULL, mdm_ok, mdm_ok)) return HardSocketReset();//подключаем модуль к GPRS сети
@@ -404,6 +418,7 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	chdf = false;
 	//тут надо посмотреть ответ от сервера, может надо включить обогрев
 	//???????????????? надо читать по двести в цикле три раза, потому что из серийного порта больше 256 не приходит+ заголовок команды 50 символол, поэтому не влезает
+	Watchdog.reset();
 	if (SendATcommand4Str("AT+CIPRXGET=2,200", mdm_ok, mdm_error, 3000, 500) != 1) {//читаем ответ сервера он большой
 		if (!WaitResponse_P(NULL, mdm_ok, mdm_ok)) { //подждем еще чтение, вдруг долго
 			return HardSocketReset();
@@ -413,6 +428,7 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	Serial.println("------1-");
 	Serial.println(serial_buff);
 #endif
+	Watchdog.reset();
 	if (SendATcommand4Str("AT+CIPRXGET=2,200", mdm_ok, mdm_error, 3000, 500) != 1) {//читаем вторую часть
 		if (!WaitResponse_P(NULL, mdm_ok, mdm_ok)) { //подждем еще чтение, вдруг долго
 			return HardSocketReset();
@@ -422,7 +438,9 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	Serial.println("------2-");
 	Serial.println(serial_buff);
 #endif
+	Watchdog.reset();
 	TCPSocketResponse(htr, holl, wtr, irr); //обработаем ответ сервера
+	Watchdog.reset();
 	return true;
 }
 boolean VGSM3::HardSocketReset() {
@@ -534,6 +552,7 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
 */
 boolean VGSM3::CheckSMSCommand(Heater &htr, Refrigerator &holl, Water &wtr, Irrigation &irr, boolean &hf, boolean& rf, boolean& wf, boolean& irrf, boolean& htf, boolean& hdf)
 {
+	Watchdog.reset();
 	if ((in_msg_buff == NULL) || (in_msg_buff == "\0")) return false; //пустой буффер, не может содержать команд
 
 #ifdef _TRACE
@@ -639,6 +658,7 @@ boolean VGSM3::CheckSMSCommand(Heater &htr, Refrigerator &holl, Water &wtr, Irri
 #endif
 		return true;
 	}
+	Watchdog.reset();
 	return false; //unknown command
 }
 
