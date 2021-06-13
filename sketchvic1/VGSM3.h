@@ -1,12 +1,12 @@
 #pragma once
-#include <SoftwareSerial.h>
 #include "def.h"
 #include "water.h"
 #include "heat.h"
 #include "mylcd.h"
 #include "holl.h"
 #include "irr.h"
-
+#include "GyverWDT.h"
+#include <SoftwareSerial.h>
 
 //команда - конфигурации модема под оператора MTS
 //#define command_APN "AT+CSTT=\"internet.mts.ru\",\"mts\",\"mts\""
@@ -23,6 +23,7 @@
 class VGSM3
 {
 private:
+	//HardwareSerial GSMport = Serial1;
 	SoftwareSerial GSMport = SoftwareSerial(2, 3); // открываем работу с gsm модулем через программный эмулятор сериал через пин 2 и 3
 	MYLCD *_lcd;
 public:

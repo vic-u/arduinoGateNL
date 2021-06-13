@@ -32,7 +32,7 @@ void setup() {
   
   Serial.begin(9600);//открываем ком порт для вывода отладки
   #ifdef _TRACE
-	Watchdog.enable(INTERRUPT_MODE, WDT_PRESCALER_1024); // Режим генерации 
+	//Watchdog.enable(INTERRUPT_MODE, WDT_PRESCALER_1024); // Режим генерации 
 	Serial.println(F("first"));
 	lcd.log(F("first"));
   #endif
@@ -155,7 +155,7 @@ void loop() {
 	Watchdog.reset();
 	Watchdog.disable();
 	delay(30000); //ждем 30 секунд и делаем новый опрос 
-	Watchdog.enable(INTERRUPT_MODE, WDT_PRESCALER_1024); // Режим генерации 
+	//Watchdog.enable(INTERRUPT_MODE, WDT_PRESCALER_1024); // Режим генерации 
 }
 /* Прерывание watchdog */
 ISR(WATCHDOG) {

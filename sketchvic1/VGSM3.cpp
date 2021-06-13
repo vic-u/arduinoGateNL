@@ -1,5 +1,5 @@
 #include "VGSM3.h"
-#include "GyverWDT.h"
+
 
 /**
    Функция открывает порт модема на скорости 9600
@@ -21,8 +21,9 @@ int8_t VGSM3::SendATcommand4(const __FlashStringHelper *commandAT, const char* e
 	Watchdog.reset();
 	if (commandAT != NULL) GSMport.println(commandAT);  // если команда не NULL, т.е. она есть, то отправляем в порт модема ее.
 	//читаем буфер или после отправки этой команды или текущий буфер от предыдущей команды
-	return ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
 	Watchdog.reset();
+	return ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
+	
 }
 /**
    Отправляет в модем команду из commandAT
@@ -32,8 +33,9 @@ int8_t VGSM3::SendATcommand4(const __FlashStringHelper *commandAT, const char* e
 int8_t VGSM3::SendATcommand4Str(const char* commandAT, const char* expected_answer1, const char* expected_answer2, unsigned int timeout, unsigned int adelay) {
 	Watchdog.reset();
 	if (commandAT != NULL) GSMport.println(commandAT);  // отправляем команду в порт модема
-	return  ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
 	Watchdog.reset();
+	return  ReadBuffer(expected_answer1, expected_answer2, timeout, adelay); //смотрим ответ модема и выводим в консоль
+	
 }
 /**
    Функция читает данные из буфера модема в глобальную переменную
@@ -191,15 +193,23 @@ boolean VGSM3::InitGSM() {
 #endif
 	Watchdog.reset();
 	// раскомментить
-	if (SendATcommand4(F("AT + CSCLK = 0"), mdm_ok, mdm_error, WT5) != 1) return false; 
-	if(SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, WT5) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
-
+	//if (SendATcommand4(F("AT + CSCLK = 0"), mdm_ok, mdm_error, WT5) != 1) return false; 
+	if (SendATcommand4(F("AT+CFUN=1,1"), mdm_ok, mdm_error, 10000, 90000) != 1) return false;
+	//b ;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд7
+	//if (!WaitResponse_P(NULL, mdm_ready, mdm_ready))//подключаем модуль к GPRS сети
+	//	if (!WaitResponse_P(NULL, mdm_ready, mdm_ready)) 
+	//		if (!WaitResponse_P(NULL, mdm_ready, mdm_ready))
+	//			if (!WaitResponse_P(NULL, mdm_ready, mdm_ready))
+	//				return false;//подключаем модуль к GPRS сети
+	//Serial.println(b);
+	
+	//Serial.println("ok");
 	//if (SendATcommand4(F("AT+CPOWD=0"), mdm_ok, mdm_error, 10000, 60000) != 1) return false;
 	//if (SendATcommand4(F("AT"), mdm_ok, mdm_error, 10000, 90000) != 1) return false;//команда перезагрузки модема отправляем в порт модема // ждем 10 секунд
 	// здесь надо добавить ожидания до call ready
 	if (SendATcommand4(F("AT"), mdm_ok, mdm_error, WT5) != 1) return false;//первая команда в модем, для проверки, что оклемался после 
 	//перезагрузки// ждем 10 секунд чтобы все строки модем выдал в буфер
-	if (SendATcommand4(F("AT+CPMS= \"SM\""), mdm_ok, mdm_error, WT5) != 1) return false; // переключаем хранилище смс на сим карту и телефон
+	//if (SendATcommand4(F("AT+CPMS= \"ME\""), mdm_ok, mdm_error, WT5) != 1) return false; // переключаем хранилище смс на сим карту и телефон
 	DeleteAllSMS();
 	Watchdog.reset();
 	return true;
@@ -219,7 +229,7 @@ void VGSM3::SendInitSMSChr()
 	sprintf_P(out_msg_buff, PSTR("%S%c"), help_msg, 0x1A);
 	strcpy(out_phn_buff, PHONENUM);
 #ifdef _TRACE
-	Serial.println("5");
+	//Serial.println("5");
 	Serial.println(out_msg_buff);
 	Serial.println(out_phn_buff);
 #endif	
@@ -305,7 +315,9 @@ boolean VGSM3::InitGPRS() {
 	// Selects Single-connection mode
 	Watchdog.reset();
 	if (SendATcommand4(F("AT+CREG?"), mdm_ok, mdm_error, WT5) != 1) return false;//проверяем регистрацию в сети
-	if (SendATcommand4(F("AT+CGATT=1"), mdm_ok, mdm_error, WT5) != 1) 
+	int result = SendATcommand4(F("AT+CGATT=1"), mdm_ok, mdm_error, WT5);
+	if (result == 2) return false;
+	if ( result != 1) 
 		if (!WaitResponse_P(NULL, mdm_ok, mdm_ok)) return HardSocketReset();//подключаем модуль к GPRS сети
 	if (SendATcommand4(F("AT+CIPSHUT"), mdm_ok, mdm_error, WT5) != 1) 
 		if (!WaitResponse_P(NULL, mdm_ok, mdm_ok)) return HardSocketReset(); //подждем еще 
@@ -375,27 +387,27 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 	dtostrf(htr.delta_temp, 1, 0, str_dt);
 
 #ifdef _TRACE
-	Serial.println("+++++++++");
+	//Serial.println("+++++++++");
 	Serial.println(str_mt);
 
-	Serial.println("+++++++++");
+	//Serial.println("+++++++++");
 	Serial.println(str_dt);
 
-	Serial.println("StatusChr");
+	//Serial.println("StatusChr");
 	Serial.println(out_msg_buff);
 #endif	
 	//формируем строку в сервер
 	sprintf_P(out_msg_buff, fmt_http_sts_send, "GET /entry2/", "=" MAC_ADDRESS DEVICENAME, str_bt, "=", str_rt, "=",
-		(hf) ? ((htrflag) ? "ON" : "OFF") : "", "=",
-		(rf) ? ((hollflag) ? "ON" : "OFF") : "", "=",
-		(wf) ? ((wtrflag) ? "ON" : "OFF") : "", "=",
-		(irrf) ? ((irrflag) ? "ON" : "OFF") : "", "=",
+		(hf) ? ((htr.heat_started) ? "ON" : "OFF") : "", "=",
+		(rf) ? ((holl.refr_started) ? "ON" : "OFF") : "", "=",
+		(wf) ? ((wtr.water_started) ? "ON" : "OFF") : "", "=",
+		(irrf) ? ((irr.irr_started) ? "ON" : "OFF") : "", "=",
 		(htf) ? str_mt:"", "=", 
 		(hdf) ? str_dt:"", " HTTP/1.1\r\n", "Host:194.87.144.141:3000\r\n", "User-Agent:ARDU\r\n", "Accept:text/html\r\n", "Connection:keep-alive\r\n", "\r\n\0");
 #ifdef _TRACE
-	Serial.println("+++++++++");
+	//Serial.println("+++++++++");
 	Serial.println(out_msg_buff);
-	Serial.println("+++++++++");
+	//Serial.println("+++++++++");
 #endif	
 	//выставляем длину данных которые отправим
 	memset(aux_str, '\0', sizeof(aux_str));
@@ -425,7 +437,7 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 		}
 	}
 #ifdef _TRACE
-	Serial.println("------1-");
+	Serial.println(F("------1-"));
 	Serial.println(serial_buff);
 #endif
 	Watchdog.reset();
@@ -435,7 +447,7 @@ boolean  VGSM3::TCPSendData2(double boxtemp, double roomtemp, boolean htrflag, b
 		}
 	}
 #ifdef _TRACE
-	Serial.println("------2-");
+	Serial.println(F("------2-"));
 	Serial.println(serial_buff);
 #endif
 	Watchdog.reset();
@@ -459,13 +471,13 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
 	char reply[4];
 	memset(reply, '\0', sizeof(reply));//очищаем строку
 #ifdef _TRACE
-	Serial.println("--parseresponse---");
+	Serial.println(F("--parseresponse---"));
 #endif
 	int fl = 0;//начальный символ строки, с которого надо начинать поиск, здесь наинаем с начала строки
 	//ищем вхождение =26FD52AD4E94=o2s1=== до следующего = , между ними выделяем ON или OFF
 	if (ParseTemplateChr(fl, resp_md, eqv, reply, sizeof(reply))) {
 #ifdef _TRACE
-		Serial.print("--parse---");
+		Serial.print(F("--parse---"));
 		Serial.println(reply);
 #endif
 		//даем команду устройству на включение или отключение
@@ -492,6 +504,7 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
 				holl.refr_command = RC_DEVICEOFF;
 			}
 		}
+		memset(reply, '\0', sizeof(reply));//очищаем строку
 		//смотрим строку дальше, там может быть включение воды, 
 		//начинаем поиск с последнего значения last - =26FD52AD4E94=o2s1===ON=ON
 		//передаем в fl и ищем =ON=
@@ -509,6 +522,7 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
 		//смотрим строку дальше, там может быть включение полива, 
 		//начинаем поиск с последнего значения last - =26FD52AD4E94=o2s1===ON=ON=ON
 		//передаем в fl и ищем =OFF=
+		memset(reply, '\0', sizeof(reply));//очищаем строку
 		if (ParseTemplateChr(fl, eqv, eqv, reply, sizeof(reply))) {
 			//даем команду устройству на включение или отключение
 			if (strstr_P(reply, on_msg)) {
@@ -523,6 +537,7 @@ int VGSM3::TCPSocketResponse(Heater &htr, Refrigerator& holl, Water& wtr, Irriga
 		//смотрим строку дальше, там может быть максимальная температура, 
 		//начинаем поиск с последнего значения last - =26FD52AD4E93=o1s1==ON
 		//передаем в fl и ищем =25=
+		memset(reply, '\0', sizeof(reply));//очищаем строку
 		if (ParseTemplateChr(fl, eqv, eqv, reply, sizeof(reply))) {
 #ifdef _TRACE
 			Serial.println(reply);
@@ -697,7 +712,7 @@ void VGSM3::StatusChr(double boxtemp, double roomtemp, boolean wtrflag, boolean 
 {
 	char str_rt[6];
 	char str_bt[6];
-	Serial.println("StatusChr");
+	//Serial.println("StatusChr");
 	ConvertTempToStr(boxtemp,str_bt, sizeof(str_rt));
 	ConvertTempToStr(roomtemp, str_rt, sizeof(str_rt));
 	
@@ -731,7 +746,7 @@ boolean VGSM3::ConvertTempChr(char * command, int &t)
 		if (istr[0] == '=')//ищем равно в строке
 		{
 #ifdef _TRACE
-			Serial.println("get eq");
+			//Serial.println("get eq");
 #endif
 			istr = &command[i++]; // забираем число, оставшаяся часть строки
 			t = atoi(istr); //преобразуем в число

@@ -16,7 +16,7 @@ void Water::checkWater() // включение и отключение авто�
     water_started = true;
     water_command = RC_NOTHING;
     #ifdef _TRACE 
-      Serial.println("water boiler start"); 
+      Serial.println(F("water boiler start")); 
     #endif
     return;
   }

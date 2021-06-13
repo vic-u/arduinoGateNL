@@ -79,6 +79,7 @@ const char ds_msg[]				PROGMEM = { "DELTA SET " };
 const char mdm_ip_ok[]			PROGMEM = { "." };
 const char mdm_error[]			PROGMEM = { "ERROR" };
 const char mdm_ok[]				PROGMEM = { "OK" };
+const char mdm_ready[]				PROGMEM = { "SMS Ready" };
 const char mdm_initial[]		PROGMEM = { "INITIAL" };
 const char mdm_empty[]		    PROGMEM = { "" };
 const char mdm_start[]		    PROGMEM = { "START" };
